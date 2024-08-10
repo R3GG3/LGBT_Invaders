@@ -1,10 +1,11 @@
-//TODO: While Pressing "Fire" multiple times, projectiles are being destroyed before reaching end point
+//TODO: While Pressing "Fire" multiple times, projectiles are being destroyed before reaching end point;
+//      Bug where you score free point somehow && enemy often spawns in top-left corner multiple times at once
 
 var player_posx = window.getComputedStyle(document.getElementById("hero")).getPropertyValue("left");
 var player_posy = window.getComputedStyle(document.getElementById("hero")).getPropertyValue("top");
 
 //-----------CONFIG---------------
-const MOVEOFFSET = 35;
+const MOVEOFFSET = 55;
 const GAMEAREA_CORRECTION = 70;
 const SHOOTOFFSETX = 15;
 const SHOOTOFFSETY = 35;
@@ -13,14 +14,17 @@ const RHIT_OFFSET = 64; //Right HitBox
 const LHIT_OFFSET = 30; //Left HitBox
 const VHIT_OFFSET = 30; //Vertical HitBox
 const SPAWN_OFFSET = 80;
-const ENEMY_LINE = 10;
-const NEW_ENEMY_LINE_OFFSET = 20;
+const ENEMIES_IN_LINE = 3;
+const NEW_ENEMY_LINE_OFFSET = 45;
+const ENEMIES_START_POINT = -40;
+const SPAWN_NEW_ENEMY_TIME = 4000 //ms
 //---------------------------------
 
-var enemies_spawn_top = 0;
+var enemies_spawn_top = ENEMIES_START_POINT;
 var casings = 0;
 var enemies = 0;
 var score = 0;
+var hearts = 3;
 
 //controls
 document.addEventListener("keypress", function(event) {
@@ -63,6 +67,21 @@ function get_player_posx_number()
 function get_player_posy_number()
 {
     return Number(player_posy.substring(0, player_posy.indexOf('p')));
+}
+
+function playerLoseHeart()
+{
+    hearts-=1;
+    if(hearts<=0)
+    {
+        return false;
+    }
+    document.getElementById("lifes_list").innerHTML = "";
+    for(let i=0; i<hearts; i++)
+    {
+        document.getElementById("lifes_list").innerHTML += '<li><img src="images/hero.png"/></li>';
+    }
+    return true;
 }
 
 
@@ -150,20 +169,22 @@ function if_hit_destroy_enem(proj)
     return false;
 }
 
-function if_in_zone(pos)
+//In need of reconstructing
+function if_in_zone(posx, posy)
 {
     let class_enemies = document.getElementsByClassName("enemy");
-    for(let i=0; i<class_enemies.length-1; i++)
+
+    //class_enemies.length-1 => removed '-1'
+    for(let i=0; i<class_enemies.length; i++)
     {
-        if(pos<=get_enemy_posx_number(class_enemies[i])+SPAWN_OFFSET && pos>=get_enemy_posx_number(class_enemies[i])-SPAWN_OFFSET)
+        //Only checks in x pos, not whether it's correct in y pos
+        if(
+            (posx<=get_enemy_posx_number(class_enemies[i])+SPAWN_OFFSET && posx>=get_enemy_posx_number(class_enemies[i])-SPAWN_OFFSET) &&
+            (posy==get_enemy_posy_number(class_enemies[i]))
+        )
         {
-            //console.log("IN ZONE");
-            //console.log("[IZ] Randomized Pos: "+String(pos));
-            //console.log("[IZ] Enemy Pos: "+String(get_enemy_posx_number(class_enemies[i])));
             return true;
         }
-        //console.log("Randomized Pos: "+String(pos));
-        //console.log("Enemy Pos: "+String(get_enemy_posx_number(class_enemies[i])));
     }
     return false;
 }
@@ -171,20 +192,25 @@ function if_in_zone(pos)
 /*-------------------ENEMIES--------------------------------------------------------*/
 
 
-function startgame(){
+function spawnNewEnemies(){
     enemies_spawn_top+=NEW_ENEMY_LINE_OFFSET;
-     spawnEnemies();
+     renderEnemies();
 }
 
+//TODO: Added resetting enemies_spawn_top when reaching 10s score (to refactore later)
 function update_score(){
+    if(score%10==0)
+    {
+        enemies_spawn_top = ENEMIES_START_POINT;
+    }
     score+=1;
     document.getElementById("score").innerHTML = "Score: "+ String(score);
 }
 
-function spawnEnemies()
+function renderEnemies()
 {
     let new_line_enemy = 0;
-    while(new_line_enemy<ENEMY_LINE){
+    while(new_line_enemy<ENEMIES_IN_LINE){
         new_line_enemy+=1;
         enemies+=1;
         const enemy_div = document.createElement("div");
@@ -209,11 +235,10 @@ function set_enemy_div_attr(enemy){
 
 function generate_enemy_position(){
     let randomized_pos = Math.floor(Math.random() * (window.innerWidth-GAMEAREA_CORRECTION-20)+1);
-    while(if_in_zone(randomized_pos))
+    while(if_in_zone(randomized_pos, enemies_spawn_top))
     {
         randomized_pos = Math.floor(Math.random() * (window.innerWidth-GAMEAREA_CORRECTION-20)+1);
     }
-    //console.log("FINAL: "+String(randomized_pos));
 
     return randomized_pos;
 }
@@ -231,5 +256,31 @@ function enemy_destroy(enemy)
 {
     enemy.remove();
 }
-
 /*----------------------------------------------------------------------------------*/
+
+function LoseGame(){
+    alert("Game Lost!");
+    window.location.reload();
+}
+
+async function startGame() 
+{
+    while(true)
+    {
+        if(enemies_spawn_top>=get_player_posy_number()-NEW_ENEMY_LINE_OFFSET)
+        {
+            enemies_spawn_top = ENEMIES_START_POINT;
+            if(!playerLoseHeart())
+            {
+                LoseGame();
+            }
+        }
+        spawnNewEnemies();
+        await sleep(SPAWN_NEW_ENEMY_TIME);
+    }
+        
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

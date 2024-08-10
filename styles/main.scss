@@ -25,8 +25,22 @@ table{
     padding: 3px;
 }
 
+#title{
+    width: 15%;
+}
+
 #score{
     text-align: center;
+}
+
+#lifes ul{
+    display: flex;
+}
+
+#lifes ul li{
+    list-style-type: none;
+    flex-direction: row;
+    padding-left: 20px;
 }
 
 
