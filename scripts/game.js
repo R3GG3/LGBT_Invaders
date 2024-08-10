@@ -1,5 +1,6 @@
 //TODO: While Pressing "Fire" multiple times, projectiles are being destroyed before reaching end point;
 //      Bug where you score free point somehow && enemy often spawns in top-left corner multiple times at once
+//Possible problems with synchro
 
 var player_posx = window.getComputedStyle(document.getElementById("hero")).getPropertyValue("left");
 var player_posy = window.getComputedStyle(document.getElementById("hero")).getPropertyValue("top");
@@ -17,7 +18,8 @@ const SPAWN_OFFSET = 80;
 const ENEMIES_IN_LINE = 3;
 const NEW_ENEMY_LINE_OFFSET = 45;
 const ENEMIES_START_POINT = -40;
-const SPAWN_NEW_ENEMY_TIME = 4000 //ms
+const SPAWN_NEW_ENEMY_TIME = 4000; //ms
+const TRY_RANDOMIZE_LIMIT = 1000;
 //---------------------------------
 
 var enemies_spawn_top = ENEMIES_START_POINT;
@@ -45,7 +47,7 @@ document.addEventListener("keypress", function(event) {
   });
 
 function move_left(){
-    if(get_player_posx_number()<=0){return;}
+    if(get_player_posx_number()<=10){return;}
 
         player_posx = window.getComputedStyle(document.getElementById("hero")).getPropertyValue("left");
         player_posx = String(get_player_posx_number()-MOVEOFFSET)+"px";
@@ -235,8 +237,15 @@ function set_enemy_div_attr(enemy){
 
 function generate_enemy_position(){
     let randomized_pos = Math.floor(Math.random() * (window.innerWidth-GAMEAREA_CORRECTION-20)+1);
+    let randomized_pos_try = 0;
     while(if_in_zone(randomized_pos, enemies_spawn_top))
     {
+        if(randomized_pos_try>=TRY_RANDOMIZE_LIMIT)
+        {
+            enemies_spawn_top+=NEW_ENEMY_LINE_OFFSET;
+            break;
+        }
+        randomized_pos_try+=1;
         randomized_pos = Math.floor(Math.random() * (window.innerWidth-GAMEAREA_CORRECTION-20)+1);
     }
 
