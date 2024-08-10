@@ -6,9 +6,12 @@ var player_posy = window.getComputedStyle(document.getElementById("hero")).getPr
 //-----------CONFIG---------------
 const MOVEOFFSET = 35;
 const GAMEAREA_CORRECTION = 70;
-const SHOOTOFFSET = 35;
+const SHOOTOFFSETX = 15;
+const SHOOTOFFSETY = 35;
 const PROJECTILE_TRAVEL_TIME = 10;
-const HIT_OFFSET = 30;
+const RHIT_OFFSET = 64; //Right HitBox
+const LHIT_OFFSET = 30; //Left HitBox
+const VHIT_OFFSET = 30; //Vertical HitBox
 const SPAWN_OFFSET = 80;
 const ENEMY_LINE = 10;
 const NEW_ENEMY_LINE_OFFSET = 20;
@@ -76,8 +79,8 @@ function player_fire(){
     document.getElementById("gamearea").appendChild(casing);
 
     //Setposition
-    document.getElementById("c"+String(casings)).style.left = player_posx;
-    document.getElementById("c"+String(casings)).style.top = String(get_player_posy_number()-SHOOTOFFSET)+"px";
+    document.getElementById("c"+String(casings)).style.left = String(get_player_posx_number()+SHOOTOFFSETX)+"px";
+    document.getElementById("c"+String(casings)).style.top = String(get_player_posy_number()-SHOOTOFFSETY)+"px";
 
     projectile_fly(casing);
 }
@@ -136,7 +139,8 @@ function if_hit_destroy_enem(proj)
     let class_enemies = document.getElementsByClassName("enemy");
     for(let i=0; i<class_enemies.length; i++)
     {
-        if((get_projectile_posy_number(proj) <= get_enemy_posy_number(class_enemies[i])+HIT_OFFSET&&get_projectile_posy_number(proj) >= get_enemy_posy_number(class_enemies[i])-HIT_OFFSET) && (get_projectile_posx_number(proj)<=get_enemy_posx_number(class_enemies[i])+HIT_OFFSET && get_projectile_posx_number(proj)>=get_enemy_posx_number(class_enemies[i])-HIT_OFFSET))
+        if((get_projectile_posy_number(proj) <= get_enemy_posy_number(class_enemies[i])+VHIT_OFFSET) && 
+            (get_projectile_posx_number(proj)<=get_enemy_posx_number(class_enemies[i])+RHIT_OFFSET && get_projectile_posx_number(proj)>=get_enemy_posx_number(class_enemies[i])-LHIT_OFFSET))
         {
             enemy_destroy(class_enemies[i]);
             enemies-=1;
